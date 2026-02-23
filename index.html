@@ -63,6 +63,42 @@
             background: rgba(139, 92, 246, 0.3);
             transform: translateY(-1px);
         }
+        .media-form {
+            background: linear-gradient(135deg, rgba(99, 91, 255, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(99, 91, 255, 0.3);
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #635bff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+        }
+        .submit-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(99, 91, 255, 0.3);
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -110,7 +146,7 @@
 
             <!-- CTA Button -->
             <div class="mt-8">
-                <a href="https://buy.stripe.com/14A28s1uOaWke249yH3sI05" target="_blank" class="btn-stripe inline-flex items-center px-8 py-4 rounded-lg font-bold text-lg">
+                <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="btn-stripe inline-flex items-center px-8 py-4 rounded-lg font-bold text-lg">
                     <i class="fas fa-ticket-alt mr-3"></i>
                     Buy Tickets $30
                 </a>
@@ -127,6 +163,68 @@
             <!-- Left Column - Event Info -->
             <div class="lg:col-span-2 space-y-6">
                 
+                <!-- Media Signup Form -->
+                <div class="media-form rounded-2xl p-6" id="media-signup-section">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i class="fas fa-press text-purple-400 text-2xl"></i>
+                        <h2 class="text-xl font-display font-bold text-purple-400">Media & Influencer Registration</h2>
+                    </div>
+                    <p class="text-gray-300 mb-4 text-sm">
+                        Press, bloggers, and content creators can request complimentary access to the 6:00 PM Press & VIP Preview. 
+                        Approval required.
+                    </p>
+                    
+                    <form id="mediaForm" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Full Name *</label>
+                                <input type="text" name="name" required class="form-input w-full px-4 py-2 rounded-lg" placeholder="Your name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Email *</label>
+                                <input type="email" name="email" required class="form-input w-full px-4 py-2 rounded-lg" placeholder="your@email.com">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Publication/Platform *</label>
+                                <input type="text" name="outlet" required class="form-input w-full px-4 py-2 rounded-lg" placeholder="Magazine, Blog, Instagram, etc.">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Role/Title *</label>
+                                <input type="text" name="role" required class="form-input w-full px-4 py-2 rounded-lg" placeholder="Editor, Photographer, Influencer, etc.">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Social Media Handles / Website</label>
+                            <input type="text" name="social" class="form-input w-full px-4 py-2 rounded-lg" placeholder="@handle or www.yoursite.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Coverage Plan *</label>
+                            <textarea name="coverage" required rows="3" class="form-input w-full px-4 py-2 rounded-lg" placeholder="How do you plan to cover this event? (Article, Instagram posts, TikTok, etc.)"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Previous Fashion/Events Coverage (Links)</label>
+                            <textarea name="portfolio" rows="2" class="form-input w-full px-4 py-2 rounded-lg" placeholder="Links to previous work (optional)"></textarea>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="submit-btn w-full py-3 rounded-lg font-bold text-white flex items-center justify-center">
+                            <i class="fas fa-paper-plane mr-2"></i> Submit Request
+                        </button>
+                    </form>
+
+                    <div id="successMessage" class="hidden success-message rounded-lg p-4 mt-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span class="font-medium">Request submitted! Check your email for confirmation.</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 1. What's Included -->
                 <div class="glass-panel rounded-2xl p-6">
                     <h2 class="text-xl font-display font-bold mb-4">What's Included</h2>
@@ -135,7 +233,7 @@
                             <i class="fas fa-female text-amber-500 mt-1"></i>
                             <div>
                                 <h4 class="font-medium">Live Mannequin Showcase</h4>
-                                <p class="text-sm text-gray-400">Featuring looks from Fashion Week designers</p>
+                                <p class="text-sm text-gray-400">Featuring a preview of select looks from Fashion Week showcasing designers</p>
                             </div>
                         </div>
                         <div class="flex items-start space-x-3">
@@ -149,7 +247,7 @@
                             <i class="fas fa-glass-cheers text-amber-500 mt-1"></i>
                             <div>
                                 <h4 class="font-medium">Complimentary Bar</h4>
-                                <p class="text-sm text-gray-400">Wine and tequila service included</p>
+                                <p class="text-sm text-gray-400">Wine and alcoholic beverages included</p>
                             </div>
                         </div>
                         <div class="flex items-start space-x-3">
@@ -310,7 +408,7 @@
                             <div class="absolute top-0 right-0 bg-amber-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">BEST VALUE</div>
                             <div class="flex justify-between items-start mb-3">
                                 <div>
-                                    <h3 class="font-bold text-lg">Pre-Sale Online</h3>
+                                    <h3 class="font-bold text-lg">Online Presale</h3>
                                     <p class="text-sm text-gray-400">Until Mar 7, 12:00 PM</p>
                                 </div>
                                 <div class="text-right">
@@ -323,7 +421,7 @@
                                 <li class="flex items-center"><i class="fas fa-check text-green-400 mr-2 text-xs"></i> Skip the line</li>
                                 <li class="flex items-center"><i class="fas fa-check text-green-400 mr-2 text-xs"></i> Connect with designers, models & production crew</li>
                             </ul>
-                            <a href="https://buy.stripe.com/14A28s1uOaWke249yH3sI05" target="_blank" class="btn-stripe w-full py-3 rounded-lg font-bold text-center block flex items-center justify-center">
+                            <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="btn-stripe w-full py-3 rounded-lg font-bold text-center block flex items-center justify-center">
                                 <i class="fas fa-lock mr-2"></i> Buy Now
                             </a>
                         </div>
@@ -353,9 +451,12 @@
                         <div class="ticket-card rounded-xl p-5 border border-purple-500/30 bg-purple-500/5">
                             <div class="flex items-center space-x-2 mb-2">
                                 <h3 class="font-bold text-purple-400">Press & VIP Preview</h3>
-                                <span class="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">INVITE ONLY</span>
+                                <span class="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">REGISTER</span>
                             </div>
                             <p class="text-sm text-gray-400">6:00 PM early access for credentialed press, sponsors, and VIP guests. Includes live mannequin presentation.</p>
+                            <a href="#media-signup-section" class="mt-3 inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                                <i class="fas fa-arrow-right mr-1"></i> Apply for Access
+                            </a>
                         </div>
                     </div>
 
@@ -373,13 +474,77 @@
 
     <!-- Sticky Mobile CTA -->
     <div class="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-white/10 p-4 lg:hidden z-50">
-        <a href="https://buy.stripe.com/14A28s1uOaWke249yH3sI05" target="_blank" class="btn-stripe w-full py-3 rounded-lg font-bold text-center block flex items-center justify-center">
+        <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="btn-stripe w-full py-3 rounded-lg font-bold text-center block flex items-center justify-center">
             <i class="fas fa-ticket-alt mr-2"></i> Buy Tickets $30
         </a>
     </div>
 
     <!-- Spacer for mobile CTA -->
     <div class="h-20 lg:hidden"></div>
+
+    <script>
+        // Google Sheets Integration
+        const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        
+        document.getElementById('mediaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Add timestamp
+            data.timestamp = new Date().toISOString();
+            data.event = 'Fashion Week Sacramento 2026';
+            data.status = 'Pending Review';
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.result === 'success') {
+                    document.getElementById('mediaForm').reset();
+                    document.getElementById('successMessage').classList.remove('hidden');
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.add('hidden');
+                    }, 5000);
+                } else {
+                    throw new Error('Submission failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error submitting your request. Please try again or email us directly.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>

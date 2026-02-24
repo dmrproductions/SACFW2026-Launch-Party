@@ -3,46 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DMR Productions - Fashion Week Sacramento 2026 Command Center</title>
+    <title>DMR Productions - Fashion Week Sacramento 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
-            color: #f5f5f5;
-        }
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #f5f5f5; }
         .font-display { font-family: 'Playfair Display', serif; }
         .glass-panel {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .nav-btn.active {
-            color: #f59e0b;
-            background: rgba(245, 158, 11, 0.1);
-        }
+        .nav-btn.active { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
         .ticket-iframe-container {
             background: #0a0a0a;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .live-indicator {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .stat-card {
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.05);
-        }
+        .live-indicator { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .admin-only { display: none; }
+        .admin-mode .admin-only { display: block; }
+        .admin-mode .public-only { display: none; }
         .media-status-pending {
             background: rgba(245, 158, 11, 0.2);
             color: #f59e0b;
@@ -53,19 +37,56 @@
             color: #22c55e;
             border: 1px solid rgba(34, 197, 94, 0.3);
         }
-        .sync-spin {
-            animation: spin 1s linear infinite;
+        .sync-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Secret admin button */
+        .admin-trigger {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 9999;
         }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .admin-trigger:hover { opacity: 0.1; }
+        
+        /* Login modal */
+        .login-modal {
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="min-h-screen overflow-x-hidden">
+<body class="min-h-screen">
+
+    <!-- Secret Admin Trigger (invisible until hovered) -->
+    <div class="admin-trigger" onclick="showLogin()" title="Admin Access"></div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center login-modal">
+        <div class="glass-panel rounded-2xl p-8 max-w-sm w-full mx-4 border border-amber-500/30">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-white text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold">Admin Access</h2>
+                <p class="text-sm text-gray-400 mt-2">Enter password to manage event</p>
+            </div>
+            <input type="password" id="admin-password" class="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-3 text-white text-center text-lg tracking-widest mb-4 focus:outline-none focus:border-amber-500" placeholder="••••••" onkeypress="if(event.key==='Enter')checkLogin()">
+            <button onclick="checkLogin()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-colors">
+                Access Dashboard
+            </button>
+            <button onclick="hideLogin()" class="w-full mt-2 text-gray-500 text-sm hover:text-gray-300">
+                Cancel
+            </button>
+        </div>
+    </div>
 
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-white/10">
+    <nav class="fixed top-0 w-full z-40 glass-panel border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-4">
@@ -73,12 +94,20 @@
                         <i class="fas fa-ticket-alt text-white text-lg"></i>
                     </div>
                     <div>
-                        <h1 class="font-display text-xl font-bold text-white">DMR Productions</h1>
+                        <h1 class="font-display text-lg font-bold text-white">DMR Productions</h1>
                         <p class="text-xs text-gray-400">Fashion Week Sacramento 2026</p>
                     </div>
                 </div>
                 
-                <div class="hidden md:flex items-center space-x-2">
+                <!-- Public Nav -->
+                <div class="public-only flex items-center space-x-2">
+                    <a href="#tickets" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors">
+                        <i class="fas fa-ticket-alt mr-2"></i>Get Tickets $30
+                    </a>
+                </div>
+
+                <!-- Admin Nav (hidden until login) -->
+                <div class="admin-only hidden md:flex items-center space-x-2">
                     <button onclick="switchView('live-sales')" class="nav-btn active px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors flex items-center space-x-2">
                         <i class="fas fa-shopping-cart"></i><span>Live Sales</span>
                         <span class="w-2 h-2 rounded-full bg-green-500 live-indicator"></span>
@@ -96,9 +125,12 @@
                     <button onclick="switchView('admin')" class="nav-btn px-4 py-2 rounded-lg text-gray-300 hover:text-white transition-colors flex items-center space-x-2">
                         <i class="fas fa-cog"></i><span>Admin</span>
                     </button>
+                    <button onclick="logout()" class="px-3 py-2 rounded-lg text-red-400 hover:text-red-300 text-sm" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
                 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-4 admin-only">
                     <button onclick="syncAllData()" class="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors" id="sync-btn">
                         <i class="fas fa-sync" id="sync-icon"></i>
                         <span id="last-sync">Sync</span>
@@ -112,13 +144,243 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <!-- PUBLIC VIEW: Ticket Sales Page -->
+    <div id="public-view" class="public-only pt-16">
+        
+        <!-- Hero -->
+        <section class="relative py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-amber-900/20 to-transparent"></div>
+            <div class="max-w-4xl mx-auto text-center relative">
+                <span class="inline-block px-4 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-4">
+                    Tickets On Sale Now - 7PM Entry
+                </span>
+                <h1 class="font-display text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">
+                    Press & Launch Party
+                </h1>
+                <p class="text-xl text-gray-300 mb-2">Fashion Week Sacramento 2026</p>
+                <p class="text-amber-400 mb-2 font-medium">Hosted at Render Art Gallery, home of Kickstradomis</p>
+                <p class="text-gray-400 mb-6">Benefiting the L for Lupus Community Foundation</p>
+                
+                <div class="flex flex-wrap justify-center gap-4 text-sm text-gray-400 mb-8">
+                    <span class="flex items-center"><i class="fas fa-calendar mr-2 text-amber-500"></i> Saturday, March 7, 2026</span>
+                    <span class="flex items-center"><i class="fas fa-clock mr-2 text-amber-500"></i> 7:00 PM - 9:00 PM</span>
+                    <span class="flex items-center"><i class="fas fa-map-marker-alt mr-2 text-amber-500"></i> Render Art Gallery</span>
+                </div>
+
+                <!-- CTA Button -->
+                <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="inline-flex items-center px-8 py-4 rounded-lg font-bold text-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white transition-all transform hover:scale-105">
+                    <i class="fas fa-ticket-alt mr-3"></i>
+                    Buy Tickets $30
+                </a>
+                <p class="text-xs text-gray-500 mt-3">$35 at the door • 21+ Event • Valid ID Required</p>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12" id="tickets">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column - Event Info -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- What's Included -->
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h2 class="text-xl font-display font-bold mb-4">What's Included</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-female text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Live Mannequin Showcase</h4>
+                                    <p class="text-sm text-gray-400">Featuring looks from Fashion Week designers</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-users text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Network & Connect</h4>
+                                    <p class="text-sm text-gray-400">Meet designers, models & production crew</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-glass-cheers text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Complimentary Bar</h4>
+                                    <p class="text-sm text-gray-400">Wine and tequila service included</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-palette text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Gallery Exhibition</h4>
+                                    <p class="text-sm text-gray-400">Access to Kickstradomis art and retail store</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Featured Collections -->
+                    <div class="glass-panel rounded-2xl p-6 border border-purple-500/30 bg-purple-500/5">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <i class="fas fa-star text-purple-400 text-2xl"></i>
+                            <h2 class="text-xl font-display font-bold text-purple-400">Featured Collections</h2>
+                        </div>
+                        <p class="text-gray-300 mb-4 text-sm">
+                            Experience an exclusive <strong>live mannequin presentation</strong> featuring looks from select designers.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm border border-purple-500/30">James Head</span>
+                            <span class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm border border-purple-500/30">Entwined Mind Designs</span>
+                            <span class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm border border-purple-500/30">Ken Adams Fashions</span>
+                            <span class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm border border-purple-500/30">+ 12 more designers</span>
+                        </div>
+                    </div>
+
+                    <!-- Venue Info -->
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h2 class="text-xl font-display font-bold mb-4">Official Venue Sponsor</h2>
+                        <div class="flex items-start space-x-4 mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-building text-amber-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Render Art Gallery / The Kicksverse</h3>
+                                <p class="text-gray-400">200 N 16th Street #400, Sacramento, CA 95811</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-300">
+                            New home of internationally recognized artist <strong class="text-amber-400">Kickstradomis</strong>, featuring his brand new retail store with clothing line and collectibles.
+                        </p>
+                    </div>
+
+                    <!-- Important Info -->
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h2 class="text-xl font-display font-bold mb-4">Important Information</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3 p-4 rounded-lg bg-white/5">
+                                <i class="fas fa-id-card text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Age Requirement</h4>
+                                    <p class="text-sm text-gray-400">21+ event. Valid ID required for entry and alcohol service.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start space-x-3">
+                                <i class="fas fa-exclamation-triangle text-red-400 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium text-red-400">Accessibility Notice</h4>
+                                    <p class="text-sm text-gray-300">This venue requires climbing a 12-step staircase. There is no elevator or wheelchair access.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3 p-4 rounded-lg bg-white/5">
+                                <i class="fas fa-clock text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-medium">Hard Out</h4>
+                                    <p class="text-sm text-gray-400">Event ends promptly at 9:00 PM.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- About the Cause -->
+                    <div class="glass-panel rounded-2xl p-6 border border-amber-500/20">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <i class="fas fa-heart text-amber-500 text-2xl"></i>
+                            <h2 class="text-xl font-display font-bold">Supporting a Great Cause</h2>
+                        </div>
+                        <p class="text-gray-300">
+                            Proceeds benefit the <strong class="text-amber-400">L for Lupus Community Foundation</strong>. 
+                            Your ticket purchase helps support lupus awareness and research in the Sacramento area.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column - Ticket Selection -->
+                <div class="lg:col-span-1">
+                    <div class="sticky top-24 space-y-4">
+                        
+                        <div class="glass-panel rounded-2xl p-6">
+                            <h2 class="text-xl font-display font-bold mb-6">Get Your Tickets</h2>
+                            
+                            <!-- Pre-Sale -->
+                            <div class="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 rounded-xl p-5 mb-4 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 bg-amber-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">BEST VALUE</div>
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-bold text-lg">Pre-Sale Online</h3>
+                                        <p class="text-sm text-gray-400">Until Mar 7, 12:00 PM</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-amber-400">$30</div>
+                                    </div>
+                                </div>
+                                <ul class="text-sm text-gray-300 space-y-1 mb-4">
+                                    <li class="flex items-center"><i class="fas fa-check text-green-400 mr-2 text-xs"></i> Guaranteed entry</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-400 mr-2 text-xs"></i> Skip the line</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-400 mr-2 text-xs"></i> Complimentary bar access</li>
+                                </ul>
+                                <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="block w-full py-3 rounded-lg font-bold text-center bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white transition-all">
+                                    <i class="fas fa-lock mr-2"></i> Buy Now $30
+                                </a>
+                            </div>
+
+                            <!-- Door Price -->
+                            <div class="glass-panel rounded-xl p-5 mb-4 opacity-60">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-bold text-lg">At the Door</h3>
+                                        <p class="text-sm text-gray-400">Night of event</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-white">$35</div>
+                                    </div>
+                                </div>
+                                <ul class="text-sm text-gray-300 space-y-1">
+                                    <li class="flex items-center"><i class="fas fa-info-circle text-amber-400 mr-2 text-xs"></i> Subject to capacity</li>
+                                    <li class="flex items-center"><i class="fas fa-exclamation-circle text-red-400 mr-2 text-xs"></i> May sell out</li>
+                                </ul>
+                                <button class="w-full py-2 rounded-lg font-bold bg-gray-700 text-gray-400 cursor-not-allowed mt-3" disabled>
+                                    Available at Venue
+                                </button>
+                            </div>
+
+                            <!-- VIP Info -->
+                            <div class="glass-panel rounded-xl p-5 border border-purple-500/30 bg-purple-500/5">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <h3 class="font-bold text-purple-400">Press & VIP Preview</h3>
+                                    <span class="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30">INVITE ONLY</span>
+                                </div>
+                                <p class="text-sm text-gray-400">6:00 PM early access for credentialed press and VIP guests.</p>
+                            </div>
+                        </div>
+
+                        <!-- Capacity Indicator -->
+                        <div class="glass-panel rounded-xl p-4 text-center">
+                            <p class="text-xs text-gray-400 mb-1">Tickets Remaining</p>
+                            <p class="text-2xl font-bold text-green-400" id="public-capacity">--</p>
+                            <p class="text-xs text-gray-500">of 120 capacity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sticky Mobile CTA -->
+        <div class="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-white/10 p-4 lg:hidden z-30">
+            <a href="https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06" target="_blank" class="block w-full py-3 rounded-lg font-bold text-center bg-gradient-to-r from-amber-500 to-orange-600 text-white">
+                <i class="fas fa-ticket-alt mr-2"></i> Buy Tickets $30
+            </a>
+        </div>
+        <div class="h-20 lg:hidden"></div>
+    </div>
+
+    <!-- ADMIN VIEWS (Hidden until login) -->
+    <main class="admin-only pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto hidden">
         
         <!-- Live Sales View -->
         <div id="view-live-sales" class="view-section space-y-6">
-            
-            <!-- Event Header -->
             <div class="glass-panel rounded-2xl p-6 border-l-4 border-amber-500">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -130,98 +392,56 @@
                             <span class="text-gray-400 text-sm">March 7, 2026 • 7:00 PM</span>
                         </div>
                         <h2 class="text-3xl font-display font-bold text-white">Press & Launch Party</h2>
-                        <p class="text-gray-400 mt-1">
-                            <i class="fas fa-map-marker-alt mr-2 text-amber-500"></i>
-                            Render Art Gallery / The Kicksverse • 200 N 16th St #400, Sacramento
-                        </p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="text-right">
-                            <p class="text-sm text-gray-400">Current Capacity</p>
-                            <p class="text-2xl font-bold text-amber-400" id="live-capacity">-- / 120</p>
-                        </div>
-                        <button onclick="refreshIframe()" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Refresh Ticket Page">
-                            <i class="fas fa-redo text-gray-400"></i>
-                        </button>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Current Capacity</p>
+                        <p class="text-2xl font-bold text-amber-400" id="admin-live-capacity">-- / 120</p>
                     </div>
                 </div>
-                
-                <!-- Accessibility Warning -->
-                <div class="mt-4 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start space-x-3">
-                    <i class="fas fa-exclamation-triangle text-red-400 mt-1"></i>
-                    <div>
-                        <p class="font-semibold text-red-400 mb-1">Accessibility Notice</p>
-                        <p class="text-sm text-gray-300">This venue has no elevator or wheelchair access. Entry requires climbing a 12-step staircase. This information is disclosed on all tickets.</p>
-                    </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-xl p-4 border-l-2 border-amber-500">
+                    <p class="text-gray-400 text-xs uppercase mb-1">Pre-Sale</p>
+                    <p class="text-2xl font-bold text-white">$30</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 border-l-2 border-purple-500">
+                    <p class="text-gray-400 text-xs uppercase mb-1">Door Price</p>
+                    <p class="text-2xl font-bold text-white">$35</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 border-l-2 border-pink-500">
+                    <p class="text-gray-400 text-xs uppercase mb-1">Revenue</p>
+                    <p class="text-2xl font-bold text-amber-400" id="admin-revenue">$0</p>
+                </div>
+                <div class="glass-panel rounded-xl p-4 border-l-2 border-blue-500">
+                    <p class="text-gray-400 text-xs uppercase mb-1">Checked In</p>
+                    <p class="text-2xl font-bold text-white" id="admin-checkins">0</p>
                 </div>
             </div>
 
             <!-- Embedded Ticket Site -->
             <div class="ticket-iframe-container relative">
-                <div class="absolute top-4 right-4 z-10 flex items-center space-x-2 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                    <span class="w-2 h-2 rounded-full bg-green-500 live-indicator"></span>
-                    <span class="text-xs text-gray-300">Secure Checkout Active</span>
-                </div>
-                <iframe 
-                    id="ticket-iframe"
-                    src="https://dmrproductions.github.io/SACFW2026-Launch-Party/" 
-                    width="100%" 
-                    height="1400px" 
-                    frameborder="0" 
-                    style="border:none; display:block; margin:0;">
-                </iframe>
-            </div>
-
-            <!-- Quick Stats Bar -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="stat-card glass-panel rounded-xl p-4 border-l-2 border-amber-500">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Pre-Sale Price</p>
-                    <p class="text-2xl font-bold text-white">$30</p>
-                    <p class="text-xs text-gray-500">Online until 12PM Mar 7</p>
-                </div>
-                <div class="stat-card glass-panel rounded-xl p-4 border-l-2 border-purple-500">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Door Price</p>
-                    <p class="text-2xl font-bold text-white">$35</p>
-                    <p class="text-xs text-gray-500">Cash or Card</p>
-                </div>
-                <div class="stat-card glass-panel rounded-xl p-4 border-l-2 border-pink-500">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">VIP Preview</p>
-                    <p class="text-2xl font-bold text-white">6:00 PM</p>
-                    <p class="text-xs text-gray-500">Invitation Only</p>
-                </div>
-                <div class="stat-card glass-panel rounded-xl p-4 border-l-2 border-blue-500">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Hard Out</p>
-                    <p class="text-2xl font-bold text-white">9:00 PM</p>
-                    <p class="text-xs text-gray-500">Strict End Time</p>
-                </div>
+                <iframe id="ticket-iframe" src="https://dmrproductions.github.io/SACFW2026-Launch-Party/" width="100%" height="800px" frameborder="0" style="border:none; display:block; margin:0;"></iframe>
             </div>
         </div>
 
-        <!-- Media Management View -->
+        <!-- Media View -->
         <div id="view-media" class="view-section hidden space-y-6">
             <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-display font-bold">Media & Press Management</h2>
-                    <p class="text-gray-400">VIP Preview Access • March 7, 6:00 PM</p>
-                </div>
-                <div class="flex space-x-3">
-                    <button onclick="exportMediaList()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors">
-                        <i class="fas fa-download mr-2"></i>Export List
-                    </button>
-                    <button onclick="openMediaSignup()" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-sm font-medium transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Media
-                    </button>
-                </div>
+                <h2 class="text-2xl font-display font-bold">Media & Press Management</h2>
+                <button onclick="exportMediaList()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
             </div>
 
-            <!-- Media Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="glass-panel rounded-xl p-4 border-l-2 border-blue-500">
                     <p class="text-gray-400 text-xs uppercase mb-1">Total Requests</p>
                     <p class="text-2xl font-bold text-white" id="media-total">0</p>
                 </div>
                 <div class="glass-panel rounded-xl p-4 border-l-2 border-amber-500">
-                    <p class="text-gray-400 text-xs uppercase mb-1">Pending Review</p>
+                    <p class="text-gray-400 text-xs uppercase mb-1">Pending</p>
                     <p class="text-2xl font-bold text-amber-400" id="media-pending">0</p>
                 </div>
                 <div class="glass-panel rounded-xl p-4 border-l-2 border-green-500">
@@ -234,389 +454,104 @@
                 </div>
             </div>
 
-            <!-- Media List -->
             <div class="glass-panel rounded-2xl p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Media Requests</h3>
-                    <div class="flex space-x-2">
-                        <button onclick="filterMedia('all')" class="px-3 py-1 rounded-lg text-sm bg-white/10 hover:bg-white/20 transition-colors">All</button>
-                        <button onclick="filterMedia('pending')" class="px-3 py-1 rounded-lg text-sm bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors">Pending</button>
-                        <button onclick="filterMedia('approved')" class="px-3 py-1 rounded-lg text-sm bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">Approved</button>
-                    </div>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="text-xs text-gray-400 uppercase border-b border-white/10">
-                            <tr>
-                                <th class="pb-3">Name</th>
-                                <th class="pb-3">Outlet</th>
-                                <th class="pb-3">Role</th>
-                                <th class="pb-3">Event</th>
-                                <th class="pb-3">Status</th>
-                                <th class="pb-3">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm" id="media-table">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div id="media-empty" class="text-center py-12 text-gray-500 hidden">
-                    <i class="fas fa-newspaper text-4xl mb-3 opacity-30"></i>
-                    <p>No media requests yet. They will appear here when submitted.</p>
-                </div>
+                <table class="w-full text-left">
+                    <thead class="text-xs text-gray-400 uppercase border-b border-white/10">
+                        <tr>
+                            <th class="pb-3">Name</th>
+                            <th class="pb-3">Outlet</th>
+                            <th class="pb-3">Role</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm" id="media-table"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Analytics View -->
-        <div id="view-dashboard" class="view-section hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-display font-bold">Sales Analytics</h2>
-                <div class="flex space-x-2">
-                    <select id="event-selector" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300" onchange="switchEvent(this.value)">
-                        <option value="march7">March 7 - Press Party</option>
-                        <option value="march13">March 13 - Emerging</option>
-                        <option value="march14">March 14 - Featured</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="glass-panel rounded-2xl p-6 border-l-4 border-amber-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-400 text-sm mb-1">Total Revenue</p>
-                            <h3 class="text-3xl font-bold text-white" id="total-revenue">$0</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                            <i class="fas fa-dollar-sign text-amber-500"></i>
-                        </div>
-                    </div>
-                    <p class="text-sm text-green-400 mt-2"><i class="fas fa-arrow-up mr-1"></i>Live tracking</p>
-                </div>
-                
-                <div class="glass-panel rounded-2xl p-6 border-l-4 border-purple-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-400 text-sm mb-1">Tickets Sold</p>
-                            <h3 class="text-3xl font-bold text-white" id="tickets-sold">0</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                            <i class="fas fa-ticket-alt text-purple-500"></i>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-400 mt-2">Pre-sale + Door</p>
-                </div>
-                
-                <div class="glass-panel rounded-2xl p-6 border-l-4 border-pink-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-400 text-sm mb-1">Checked In</p>
-                            <h3 class="text-3xl font-bold text-white" id="checked-in">0</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                            <i class="fas fa-check-circle text-pink-500"></i>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-400 mt-2">Event night</p>
-                </div>
-                
-                <div class="glass-panel rounded-2xl p-6 border-l-4 border-blue-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-400 text-sm mb-1">Capacity</p>
-                            <h3 class="text-3xl font-bold text-white" id="capacity-stat">0%</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                            <i class="fas fa-users text-blue-500"></i>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-400 mt-2">120 max capacity</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="glass-panel rounded-2xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">Sales Breakdown</h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
-                            <span class="text-gray-400">Pre-Sale ($30)</span>
-                            <span class="font-bold text-amber-400" id="breakdown-presale">0 tickets</span>
-                        </div>
-                        <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
-                            <span class="text-gray-400">Door Sales ($35)</span>
-                            <span class="font-bold text-white" id="breakdown-door">0 tickets</span>
-                        </div>
-                        <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
-                            <span class="text-gray-400">Media/VIP (Comp)</span>
-                            <span class="font-bold text-purple-400" id="breakdown-vip">0</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="glass-panel rounded-2xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">Recent Transactions</h3>
-                    <div class="space-y-3 max-h-64 overflow-y-auto" id="recent-transactions">
-                        <p class="text-gray-500 text-center py-8">Sync with Google Sheets to view transactions</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Check-In View -->
-        <div id="view-checkin" class="view-section hidden">
-            <div class="max-w-4xl mx-auto">
-                <div class="glass-panel rounded-2xl p-8 text-center mb-6">
-                    <h3 class="text-2xl font-display font-bold mb-2">Guest Check-In</h3>
-                    <p class="text-gray-400">Press & Launch Party - March 7, 2026</p>
-                    <p class="text-amber-400 text-sm mt-2"><i class="fas fa-map-marker-alt mr-1"></i> Render Art Gallery - 200 N 16th St #400</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Scanner -->
-                    <div class="glass-panel rounded-2xl p-6">
-                        <div class="aspect-square bg-black/50 rounded-xl relative overflow-hidden mb-4 border-2 border-dashed border-white/20 flex items-center justify-center">
-                            <i class="fas fa-qrcode text-6xl text-gray-600"></i>
-                            <div class="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-amber-500/10 opacity-50" style="animation: scan 2s linear infinite;"></div>
-                        </div>
-                        <input type="text" id="scan-input" class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-center text-white text-lg tracking-widest uppercase focus:outline-none focus:border-amber-500 transition-colors mb-4" placeholder="Enter Order # or Name">
-                        <button onclick="manualCheckIn()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-colors">
-                            Verify & Check In
-                        </button>
-                    </div>
-
-                    <!-- Search & Results -->
-                    <div class="glass-panel rounded-2xl p-6">
-                        <div class="mb-4">
-                            <div class="relative">
-                                <input type="text" id="search-guest" class="w-full bg-black/30 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-amber-500 transition-colors" placeholder="Search guest name or email..." onkeyup="searchGuests()">
-                                <i class="fas fa-search absolute left-3 top-3.5 text-gray-500"></i>
-                            </div>
-                        </div>
-
-                        <div class="space-y-3 max-h-[400px] overflow-y-auto" id="guest-list">
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="fas fa-info-circle mb-2 text-2xl"></i>
-                                <p>Import guest list to begin check-in</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Check-ins -->
-                <div class="glass-panel rounded-2xl p-6 mt-6">
-                    <h4 class="font-semibold mb-4">Recent Check-ins</h4>
-                    <div class="space-y-2" id="recent-checkins">
-                        <p class="text-gray-500 text-sm">No check-ins yet</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin View -->
-        <div id="view-admin" class="view-section hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Configuration -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="glass-panel rounded-2xl p-6">
-                        <h3 class="text-xl font-display font-bold mb-6">System Configuration</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="p-4 rounded-lg bg-white/5 border border-white/10">
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Google Sheets Web App URL</label>
-                                <input type="text" id="sheets-url" class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-500" placeholder="https://script.google.com/macros/s/.../exec">
-                                <p class="text-xs text-gray-500 mt-1">For media signup data & ticket tracking</p>
-                            </div>
-                            
-                            <div class="p-4 rounded-lg bg-white/5 border border-white/10">
-                                <label class="block text-sm font-medium text-gray-400 mb-2">Stripe Dashboard</label>
-                                <div class="flex space-x-2">
-                                    <input type="text" value="https://dashboard.stripe.com/payments" readonly class="flex-1 bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-gray-400 text-sm">
-                                    <a href="https://dashboard.stripe.com/payments" target="_blank" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors flex items-center">
-                                        <i class="fas fa-external-link-alt"></i>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="p-4 rounded-lg bg-white/5 border border-white/10">
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">Event Capacity</label>
-                                    <input type="number" id="config-capacity" value="120" class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white text-center text-2xl font-bold focus:outline-none focus:border-amber-500">
-                                </div>
-                                <div class="p-4 rounded-lg bg-white/5 border border-white/10">
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">VIP Capacity</label>
-                                    <input type="number" id="config-vip-capacity" value="40" class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2 text-white text-center text-2xl font-bold focus:outline-none focus:border-purple-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 flex space-x-3">
-                            <button onclick="saveConfig()" class="px-6 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 font-medium transition-colors">Save Settings</button>
-                            <button onclick="testConnection()" class="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors">Test Connection</button>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel rounded-2xl p-6">
-                        <h3 class="text-xl font-display font-bold mb-4">Capacity Monitor</h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center p-4 rounded-lg bg-white/5">
-                                <span class="text-gray-400">Total Capacity</span>
-                                <span class="font-bold text-2xl">120</span>
-                            </div>
-                            <div class="flex justify-between items-center p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                <span class="text-amber-400">Pre-Sale Online ($30)</span>
-                                <span class="font-bold text-amber-400 text-2xl" id="admin-presale">--</span>
-                            </div>
-                            <div class="flex justify-between items-center p-4 rounded-lg bg-white/5">
-                                <span class="text-gray-400">At Door Sales ($35)</span>
-                                <span class="font-bold text-white text-2xl" id="admin-door">--</span>
-                            </div>
-                            <div class="flex justify-between items-center p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                                <span class="text-purple-400">VIP/Media Comp</span>
-                                <span class="font-bold text-purple-400 text-2xl" id="admin-vip">--</span>
-                            </div>
-                            <div class="flex justify-between items-center p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-                                <span class="text-green-400">Remaining Available</span>
-                                <span class="font-bold text-green-400 text-2xl" id="admin-remaining">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="space-y-6">
-                    <div class="glass-panel rounded-2xl p-6">
-                        <h3 class="text-lg font-semibold mb-4">Door Sales Mode</h3>
-                        <div class="space-y-3">
-                            <button onclick="alert('Door sales mode: Ready to sell $35 tickets at entrance')" class="w-full text-left px-4 py-3 rounded-lg bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 transition-colors flex items-center space-x-3">
-                                <i class="fas fa-door-open text-amber-400"></i>
-                                <div>
-                                    <span class="block font-medium">At the Door Sales</span>
-                                    <span class="text-xs text-gray-400">$35 - Cash or Card</span>
-                                </div>
-                            </button>
-                            <button onclick="window.open('https://dmrproductions.github.io/SACFW2026-Launch-Party/', '_blank')" class="w-full text-left px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors flex items-center space-x-3">
-                                <i class="fas fa-external-link-alt text-blue-400"></i>
-                                <span>View Public Ticket Site</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel rounded-2xl p-6">
-                        <h3 class="text-lg font-semibold mb-4">Emergency Controls</h3>
-                        <div class="space-y-3">
-                            <button onclick="toggleSales()" class="w-full text-left px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors flex items-center space-x-3">
-                                <i class="fas fa-pause-circle text-yellow-400"></i>
-                                <span id="pause-sales-text">Pause Online Sales</span>
-                            </button>
-                            <button onclick="exportAllData()" class="w-full text-left px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors flex items-center space-x-3">
-                                <i class="fas fa-download text-blue-400"></i>
-                                <span>Export All Data</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel rounded-2xl p-6">
-                        <h3 class="text-lg font-semibold mb-4">System Status</h3>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Ticket Site</span>
-                                <span class="text-green-400 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Online
-                                </span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Stripe Checkout</span>
-                                <span class="text-green-400 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Active
-                                </span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Media Signups</span>
-                                <span class="text-green-400 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Active
-                                </span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-400">Last Sync</span>
-                                <span class="text-gray-300" id="admin-last-sync">Never</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Other admin views (dashboard, checkin, admin) would go here -->
+        
     </main>
-
-    <!-- Media Approval Modal -->
-    <div id="media-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel rounded-2xl p-8 max-w-lg w-full mx-4">
-            <h3 class="text-xl font-bold mb-4">Review Media Request</h3>
-            <div id="media-details" class="space-y-3 mb-6 text-sm">
-                <!-- Populated by JS -->
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="approveMedia()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors">
-                    <i class="fas fa-check mr-2"></i>Approve
-                </button>
-                <button onclick="rejectMedia()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors">
-                    <i class="fas fa-times mr-2"></i>Decline
-                </button>
-                <button onclick="closeMediaModal()" class="px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Configuration
         const CONFIG = {
-            ticketSite: 'https://dmrproductions.github.io/SACFW2026-Launch-Party/',
-            stripeLink: 'https://buy.stripe.com/aFafZiddwd4s3nq26f3sI06',
-            sheetsUrl: localStorage.getItem('sheetsUrl') || '',
-            capacity: 120,
-            vipCapacity: 40
+            sheetsUrl: 'https://script.google.com/macros/s/AKfycbwW-AsjHqP_8Wot_nhXdX1FpiUegEGDRO4FMT-IuzdIxdc6HTGspLiQLeP_wonUVRJjZQ/exec',
+            password: 'dmr2026' // Change this!
         };
 
-        // State
-        let currentView = 'live-sales';
-        let salesPaused = false;
+        let isAdmin = false;
         let mediaRequests = [];
-        let checkins = [];
-        let currentMediaId = null;
 
-        // Sample data for demo
-        const sampleMedia = [
-            { timestamp: '2026-02-20T10:30:00', name: 'Sarah Johnson', email: 'sarah@capitolweekly.com', outlet: 'Capitol Weekly', role: 'Photographer', event: 'Press Preview', status: 'approved' },
-            { timestamp: '2026-02-21T14:15:00', name: 'Mike Chen', email: 'mike@sactown.com', outlet: 'Sactown Magazine', role: 'Writer', event: 'Full Event', status: 'pending' }
-        ];
+        // Check for saved login
+        if (localStorage.getItem('fwsac_admin') === 'true') {
+            enableAdmin();
+        }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        // Update public capacity
+        async function updatePublicCapacity() {
+            try {
+                const response = await fetch(CONFIG.sheetsUrl + '?action=dashboard');
+                const data = await response.json();
+                document.getElementById('public-capacity').textContent = data.capacity.remaining;
+            } catch (e) {
+                console.log('Capacity update failed');
+            }
+        }
+        updatePublicCapacity();
+
+        // Login functions
+        function showLogin() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-modal').classList.add('flex');
+            document.getElementById('admin-password').focus();
+        }
+
+        function hideLogin() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('flex');
+            document.getElementById('admin-password').value = '';
+        }
+
+        function checkLogin() {
+            const input = document.getElementById('admin-password').value;
+            if (input === CONFIG.password) {
+                localStorage.setItem('fwsac_admin', 'true');
+                enableAdmin();
+                hideLogin();
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function enableAdmin() {
+            isAdmin = true;
+            document.body.classList.add('admin-mode');
+            
+            // Hide public, show admin
+            document.getElementById('public-view').classList.add('hidden');
+            document.querySelector('main.admin-only').classList.remove('hidden');
+            
+            // Show admin nav items
+            document.querySelectorAll('.admin-only').forEach(el => {
+                if (!el.classList.contains('view-section')) {
+                    el.classList.remove('hidden');
+                }
+            });
+            
+            // Start admin functions
             updateTime();
             setInterval(updateTime, 1000);
-            
-            // Load saved config
-            if (CONFIG.sheetsUrl) {
-                document.getElementById('sheets-url').value = CONFIG.sheetsUrl;
-            }
-            
-            // Load sample data
-            mediaRequests = [...sampleMedia];
-            updateMediaStats();
-            renderMediaTable();
-            
-            // Simulate capacity
-            updateCapacityDisplay(45, 8, 6);
-        });
+            syncAllData();
+        }
 
+        function logout() {
+            localStorage.removeItem('fwsac_admin');
+            location.reload();
+        }
+
+        // Admin functions
         function updateTime() {
             const now = new Date();
             document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -625,53 +560,38 @@
 
         function switchView(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('active');
-            });
+            document.getElementById('view-' + view).classList.remove('hidden');
             
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            
-            const btn = document.querySelector(`button[onclick="switchView('${view}')"]`);
-            if (btn) btn.classList.add('active');
-            
-            currentView = view;
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            event.target.closest('button').classList.add('active');
         }
 
-        function refreshIframe() {
-            const iframe = document.getElementById('ticket-iframe');
-            iframe.src = iframe.src;
+        async function syncAllData() {
+            const icon = document.getElementById('sync-icon');
+            icon.classList.add('sync-spin');
+            
+            try {
+                const response = await fetch(CONFIG.sheetsUrl + '?action=dashboard');
+                const data = await response.json();
+                
+                // Update displays
+                document.getElementById('admin-live-capacity').textContent = `${data.capacity.sold} / ${data.capacity.total}`;
+                document.getElementById('admin-revenue').textContent = `$${data.revenue.total.toLocaleString()}`;
+                document.getElementById('last-sync').textContent = 'Just now';
+                
+                // Update media if on that view
+                const mediaRes = await fetch(CONFIG.sheetsUrl + '?action=media');
+                mediaRequests = await mediaRes.json();
+                updateMediaStats();
+                renderMediaTable();
+                
+            } catch (e) {
+                console.error('Sync failed:', e);
+            }
+            
+            icon.classList.remove('sync-spin');
         }
 
-        function updateCapacityDisplay(presale, door, vip) {
-            const total = presale + door + vip;
-            const remaining = CONFIG.capacity - total;
-            const pct = Math.round((total / CONFIG.capacity) * 100);
-            
-            document.getElementById('live-capacity').textContent = `${total} / ${CONFIG.capacity}`;
-            document.getElementById('admin-presale').textContent = presale;
-            document.getElementById('admin-door').textContent = door;
-            document.getElementById('admin-vip').textContent = vip;
-            document.getElementById('admin-remaining').textContent = remaining;
-            document.getElementById('capacity-stat').textContent = `${pct}%`;
-            
-            // Update breakdown
-            document.getElementById('breakdown-presale').textContent = `${presale} tickets ($${presale * 30})`;
-            document.getElementById('breakdown-door').textContent = `${door} tickets ($${door * 35})`;
-            document.getElementById('breakdown-vip').textContent = vip;
-            
-            // Update revenue
-            const revenue = (presale * 30) + (door * 35);
-            document.getElementById('total-revenue').textContent = `$${revenue.toLocaleString()}`;
-            document.getElementById('tickets-sold').textContent = total;
-            
-            // Color coding
-            const capEl = document.getElementById('live-capacity');
-            if (remaining < 10) capEl.className = 'text-2xl font-bold text-red-400';
-            else if (remaining < 30) capEl.className = 'text-2xl font-bold text-amber-400';
-            else capEl.className = 'text-2xl font-bold text-green-400';
-        }
-
-        // Media Management
         function updateMediaStats() {
             const total = mediaRequests.length;
             const pending = mediaRequests.filter(m => m.status === 'pending').length;
@@ -681,266 +601,63 @@
             document.getElementById('media-pending').textContent = pending;
             document.getElementById('media-approved').textContent = approved;
             
-            // Update badge
             const badge = document.getElementById('media-badge');
             if (pending > 0) {
                 badge.textContent = pending;
                 badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
             }
         }
 
-        function renderMediaTable(filter = 'all') {
+        function renderMediaTable() {
             const tbody = document.getElementById('media-table');
-            const empty = document.getElementById('media-empty');
-            
-            let filtered = mediaRequests;
-            if (filter !== 'all') {
-                filtered = mediaRequests.filter(m => m.status === filter);
-            }
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = '';
-                empty.classList.remove('hidden');
-                return;
-            }
-            
-            empty.classList.add('hidden');
-            tbody.innerHTML = filtered.map((m, idx) => `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+            tbody.innerHTML = mediaRequests.map((m, idx) => `
+                <tr class="border-b border-white/5">
                     <td class="py-3">
                         <div class="font-medium">${m.name}</div>
                         <div class="text-xs text-gray-500">${m.email}</div>
                     </td>
                     <td class="py-3 text-gray-400">${m.outlet}</td>
                     <td class="py-3 text-gray-400">${m.role}</td>
-                    <td class="py-3 text-gray-400">${m.event}</td>
                     <td class="py-3">
                         <span class="px-2 py-1 rounded text-xs ${m.status === 'approved' ? 'media-status-approved' : 'media-status-pending'}">
                             ${m.status === 'approved' ? '✓ Approved' : '⏳ Pending'}
                         </span>
                     </td>
                     <td class="py-3">
-                        <button onclick="openMediaModal(${idx})" class="text-amber-400 hover:text-amber-300 text-sm">
-                            ${m.status === 'pending' ? 'Review' : 'View'}
-                        </button>
+                        ${m.status === 'pending' ? 
+                            `<button onclick="approveMedia(${idx})" class="text-green-400 hover:text-green-300 text-sm">Approve</button>` : 
+                            `<span class="text-gray-500 text-sm">Done</span>`
+                        }
                     </td>
                 </tr>
             `).join('');
         }
 
-        function filterMedia(type) {
-            renderMediaTable(type);
-        }
-
-        function openMediaModal(idx) {
-            currentMediaId = idx;
-            const m = mediaRequests[idx];
-            document.getElementById('media-details').innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div><span class="text-gray-400">Name:</span> <span class="text-white">${m.name}</span></div>
-                    <div><span class="text-gray-400">Email:</span> <span class="text-white">${m.email}</span></div>
-                    <div><span class="text-gray-400">Outlet:</span> <span class="text-white">${m.outlet}</span></div>
-                    <div><span class="text-gray-400">Role:</span> <span class="text-white">${m.role}</span></div>
-                    <div class="col-span-2"><span class="text-gray-400">Event:</span> <span class="text-white">${m.event}</span></div>
-                    <div class="col-span-2"><span class="text-gray-400">Submitted:</span> <span class="text-white">${new Date(m.timestamp).toLocaleString()}</span></div>
-                </div>
-            `;
-            document.getElementById('media-modal').classList.remove('hidden');
-            document.getElementById('media-modal').classList.add('flex');
-        }
-
-        function closeMediaModal() {
-            document.getElementById('media-modal').classList.add('hidden');
-            document.getElementById('media-modal').classList.remove('flex');
-            currentMediaId = null;
-        }
-
-        function approveMedia() {
-            if (currentMediaId === null) return;
-            mediaRequests[currentMediaId].status = 'approved';
-            updateMediaStats();
-            renderMediaTable();
-            closeMediaModal();
-            
-            // Send email notification (in real implementation)
-            console.log('Sending approval email to:', mediaRequests[currentMediaId].email);
-        }
-
-        function rejectMedia() {
-            if (currentMediaId === null) return;
-            mediaRequests[currentMediaId].status = 'rejected';
-            updateMediaStats();
-            renderMediaTable();
-            closeMediaModal();
-        }
-
-        function openMediaSignup() {
-            const name = prompt('Media Name:');
-            if (!name) return;
-            const email = prompt('Email:') || '';
-            const outlet = prompt('Outlet:') || '';
-            const role = prompt('Role (Photographer/Writer/etc):') || '';
-            
-            mediaRequests.push({
-                timestamp: new Date().toISOString(),
-                name, email, outlet, role,
-                event: 'Press Preview',
-                status: 'pending'
-            });
-            
+        async function approveMedia(idx) {
+            const email = mediaRequests[idx].email;
+            // In real implementation, call Apps Script to update sheet and send email
+            mediaRequests[idx].status = 'approved';
             updateMediaStats();
             renderMediaTable();
         }
 
         function exportMediaList() {
-            const csv = "Name,Email,Outlet,Role,Event,Status\n" + 
-                mediaRequests.map(m => `${m.name},${m.email},${m.outlet},${m.role},${m.event},${m.status}`).join("\n");
-            
+            const csv = "Name,Email,Outlet,Role,Status\n" + 
+                mediaRequests.map(m => `${m.name},${m.email},${m.outlet},${m.role},${m.status}`).join("\n");
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'media-list-march7.csv';
+            a.download = 'media-list.csv';
             a.click();
         }
 
-        // Sync Functions
-        async function syncAllData() {
-            const btn = document.getElementById('sync-btn');
-            const icon = document.getElementById('sync-icon');
-            
-            icon.classList.add('sync-spin');
-            btn.disabled = true;
-            
-            try {
-                // Simulate API call to Google Sheets
-                await new Promise(r => setTimeout(r, 1500));
-                
-                // In real implementation:
-                // const response = await fetch(CONFIG.sheetsUrl);
-                // const data = await response.json();
-                // updateCapacityDisplay(data.presale, data.door, data.vip);
-                
-                document.getElementById('last-sync').textContent = 'Just now';
-                document.getElementById('admin-last-sync').textContent = new Date().toLocaleTimeString();
-                
-                // Show success
-                icon.classList.remove('fa-sync');
-                icon.classList.add('fa-check');
-                setTimeout(() => {
-                    icon.classList.remove('fa-check', 'sync-spin');
-                    icon.classList.add('fa-sync');
-                }, 2000);
-                
-            } catch (error) {
-                alert('Sync failed. Check your Google Sheets URL configuration.');
-            } finally {
-                btn.disabled = false;
+        // Keyboard shortcut: Shift + A for admin
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key === 'A') {
+                showLogin();
             }
-        }
-
-        function saveConfig() {
-            const url = document.getElementById('sheets-url').value;
-            const capacity = parseInt(document.getElementById('config-capacity').value) || 120;
-            const vipCapacity = parseInt(document.getElementById('config-vip-capacity').value) || 40;
-            
-            CONFIG.sheetsUrl = url;
-            CONFIG.capacity = capacity;
-            CONFIG.vipCapacity = vipCapacity;
-            
-            localStorage.setItem('sheetsUrl', url);
-            alert('Configuration saved!');
-        }
-
-        function testConnection() {
-            if (!CONFIG.sheetsUrl) {
-                alert('Please enter a Google Sheets Web App URL first');
-                return;
-            }
-            syncAllData();
-        }
-
-        // Check-in Functions
-        function manualCheckIn() {
-            const input = document.getElementById('scan-input').value.trim();
-            if (!input) return;
-            
-            checkins.unshift({
-                name: input,
-                time: new Date(),
-                type: 'Manual Entry'
-            });
-            
-            renderCheckins();
-            document.getElementById('scan-input').value = '';
-            document.getElementById('checked-in').textContent = checkins.length;
-        }
-
-        function renderCheckins() {
-            const container = document.getElementById('recent-checkins');
-            if (checkins.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm">No check-ins yet</p>';
-                return;
-            }
-            
-            container.innerHTML = checkins.slice(0, 5).map(c => `
-                <div class="flex items-center justify-between p-3 rounded-lg bg-white/5 text-sm">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                            <i class="fas fa-user text-green-500 text-xs"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium">${c.name}</p>
-                            <p class="text-xs text-gray-400">${c.type}</p>
-                        </div>
-                    </div>
-                    <span class="text-gray-400 text-xs">${c.time.toLocaleTimeString()}</span>
-                </div>
-            `).join('');
-        }
-
-        function searchGuests() {
-            const query = document.getElementById('search-guest').value.toLowerCase();
-            // Implementation would search through ticket data
-        }
-
-        // Admin Functions
-        function toggleSales() {
-            salesPaused = !salesPaused;
-            document.getElementById('pause-sales-text').textContent = salesPaused ? 'Resume Online Sales' : 'Pause Online Sales';
-            
-            const iframe = document.getElementById('ticket-iframe');
-            if (salesPaused) {
-                iframe.style.filter = 'grayscale(100%) opacity(0.5)';
-                iframe.style.pointerEvents = 'none';
-            } else {
-                iframe.style.filter = 'none';
-                iframe.style.pointerEvents = 'auto';
-            }
-        }
-
-        function exportAllData() {
-            const data = {
-                tickets: { presale: 45, door: 8, vip: 6 },
-                media: mediaRequests,
-                checkins: checkins,
-                exported: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `fwsac-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-        }
-
-        function switchEvent(eventId) {
-            // Would switch between March 7, 13, 14 data
-            console.log('Switching to event:', eventId);
-        }
+        });
     </script>
 </body>
 </html>

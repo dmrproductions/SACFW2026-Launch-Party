@@ -1004,26 +1004,49 @@
         }
 
         // MEDIA FUNCTIONS
-        function submitMediaForm(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            
-            const media = {
-                name: formData.get('name'),
-                email: formData.get('email'),
-                outlet: formData.get('outlet'),
-                role: formData.get('role'),
-                website: formData.get('website'),
-                examples: formData.get('examples'),
-                status: 'pending',
-                submittedAt: new Date().toISOString()
-            };
-            
-            mediaRequests.push(media);
-            alert('Thank you! Your media application has been submitted for review.');
+function submitMediaForm(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const media = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        outlet: formData.get('outlet'),
+        role: formData.get('role'),
+        social: formData.get('website') || '',
+        coverage: formData.get('examples') || '',
+        portfolio: '',
+        event: 'Press & Launch Party'
+    };
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    fetch(CONFIG.sheetsUrl, {
+        method: 'POST',
+        body: JSON.stringify(media)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.result === 'success') {
+            alert('Thank you! Your media application has been submitted for review. You will receive an email confirmation shortly.');
             form.reset();
+        } else {
+            alert('Error submitting. Please try again.');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Connection error. Please check your internet and try again.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
 
         function updateMediaStats() {
             const total = mediaRequests.length;
